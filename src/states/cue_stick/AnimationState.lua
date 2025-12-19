@@ -4,11 +4,7 @@ function AnimationState:init(cue_stick)
     self.cue_stick = cue_stick
 
     self.cue_ball = self.cue_stick.cue_ball
-    print(self.cue_ball:get_position())
     self.magnitude = self.cue_stick.magnitude
-
-    self.cocking_speed = 50
-    self.hitting_speed = 400
 end
 
 function AnimationState:enter(params)
@@ -18,6 +14,9 @@ function AnimationState:enter(params)
     else 
         self.direction = -1
     end
+
+    self.cocking_speed = self.target
+    self.hitting_speed = 8*self.target 
 end
 
 function AnimationState:update(dt) 
@@ -33,6 +32,7 @@ function AnimationState:update(dt)
 
     if self.magnitude < 0 then 
         self.cue_ball.body:applyLinearImpulse(self:getForce(self.target, self.cue_stick.angle))
+        gSounds['cue_ball']:play()
         self.cue_stick:changeState('hitting')
     end
 end
@@ -43,7 +43,7 @@ function AnimationState:getForce(magnitude, angle)
 end
 
 function AnimationState:render()
-    ball_x, ball_y = self.cue_ball:get_position()
+    ball_x, ball_y = self.cue_ball:getPosition()
     stick_x = ball_x + math.cos(self.cue_stick.angle) * self.magnitude
     stick_y = ball_y + math.sin(self.cue_stick.angle) * self.magnitude
     rot = math.atan2(ball_y - stick_y, ball_x - stick_x)

@@ -1,6 +1,6 @@
 Background = Class{}
 
-function Background:init()
+function Background:init(dist)
     -- blue, green, red backgrounds 
     self.colors = {{40/255, 110/255, 160/255}, {25/255, 110/255, 35/255}, {150/255, 0/255, 0/255}}
 
@@ -31,6 +31,8 @@ function Background:init()
 
     --- Choose a random color background between blue, green, and red
     self.r, self.g, self.b = self.colors[1]
+
+    self.dist_from_walls = dist
 end
 
 function Background:update(dt)
@@ -43,8 +45,6 @@ function Background:render()
     love.graphics.rectangle('fill', 0, 0, VIRTUAL_WIDTH, VIRTUAL_HEIGHT)
     love.graphics.setShader()
 
-    dist_from_walls = 30
-    radius = 20
 
     -- Frame 
     frame_r = 60/255 
@@ -52,19 +52,9 @@ function Background:render()
     frame_b = 60/255
 
     love.graphics.setColor(frame_r, frame_g, frame_b)
-    love.graphics.rectangle('fill', 0, 0, dist_from_walls, VIRTUAL_HEIGHT)
-    love.graphics.rectangle('fill', 0, 0, VIRTUAL_WIDTH, dist_from_walls)
-    love.graphics.rectangle('fill', 0, VIRTUAL_HEIGHT - dist_from_walls, VIRTUAL_WIDTH, dist_from_walls)
-    love.graphics.rectangle('fill', VIRTUAL_WIDTH - dist_from_walls, 0, dist_from_walls, VIRTUAL_HEIGHT)
+    love.graphics.rectangle('fill', 0, 0, self.dist_from_walls, VIRTUAL_HEIGHT)
+    love.graphics.rectangle('fill', 0, 0, VIRTUAL_WIDTH, self.dist_from_walls)
+    love.graphics.rectangle('fill', 0, VIRTUAL_HEIGHT - self.dist_from_walls, VIRTUAL_WIDTH, self.dist_from_walls)
+    love.graphics.rectangle('fill', VIRTUAL_WIDTH - self.dist_from_walls, 0, self.dist_from_walls, VIRTUAL_HEIGHT)
 
-
-    -- Holes
-    love.graphics.setColor(0, 0, 0)
-    for _, x in ipairs({dist_from_walls, VIRTUAL_WIDTH - dist_from_walls}) do 
-        for _, y in ipairs({dist_from_walls, VIRTUAL_HEIGHT - dist_from_walls}) do 
-            love.graphics.circle('fill', x, y, radius)
-        end
-    end
-    love.graphics.circle('fill', VIRTUAL_WIDTH / 2, radius, radius)
-    love.graphics.circle('fill', VIRTUAL_WIDTH / 2, VIRTUAL_HEIGHT-radius, radius)
 end

@@ -7,7 +7,7 @@ require 'src/constants'
 require 'src/Background'
 require 'src/Level'
 require 'src/StateMachine'
-require 'src/CueBall'
+require 'src/Ball'
 require 'src/CueStick'
 require 'src/Slider'
 
@@ -25,4 +25,10 @@ gFonts = {
     ['medium'] = love.graphics.newFont('fonts/font.ttf', 16),
     ['large'] = love.graphics.newFont('fonts/font.ttf', 32),
     ['huge'] = love.graphics.newFont('fonts/font.ttf', 64)
+}
+
+gSounds = {
+    ['cue_ball'] = love.audio.newSource('sounds/cue_ball.wav', 'static'),
+    ['ball'] = love.audio.newSource('sounds/ball.wav', 'static'),
+    ['jazzy'] = love.audio.newSource('sounds/jazzy.mp3', 'static')
 }

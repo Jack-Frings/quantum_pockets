@@ -6,7 +6,7 @@ function CueStick:init(cue_ball)
     self.width = 8
     self.length = 120
 
-    self.angle = 0
+    self.angle = math.pi
     self.magnitude = 20
 
     self.stateMachine = StateMachine {

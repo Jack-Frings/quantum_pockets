@@ -10,13 +10,16 @@ end
 function PoweringState:update(dt) 
     self.slider:update(dt)
     if love.keyboard.wasPressed('return') or love.keyboard.wasPressed('enter') or love.keyboard.wasPressed('space') then 
-        socket.sleep(0.4)
         self.cue_stick:changeState('animation', {target=self.slider:getStrength()})
+    end
+
+    if love.keyboard.wasPressed('q') then 
+        self.cue_stick:changeState('waiting')
     end
 end
 
 function PoweringState:render()
-    ball_x, ball_y = self.cue_ball:get_position()
+    ball_x, ball_y = self.cue_ball:getPosition()
     stick_x = ball_x + math.cos(self.cue_stick.angle) * self.cue_stick.magnitude 
     stick_y = ball_y + math.sin(self.cue_stick.angle) * self.cue_stick.magnitude  
     rot = math.atan2(ball_y - stick_y, ball_x - stick_x)
