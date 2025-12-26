@@ -1,44 +1,61 @@
 Level = Class{} 
 
-function Level:init() 
+function Level:init(round, cash, timer, spawn_interval, cue_ball_radius, force_scalar, stops, cash_bonus, score_multiplier)
     self.world = love.physics.newWorld(0, 0)
     self.world:setCallbacks(beginContact, nil, nil, nil)
 
+    -- Constants (negligible difference from upgrades but wtv) 
+    self.round = round
+    self.balls_pocketed = 0 
+    self.balls_needed = self.round ^ 2
+    self.cash = cash
+
+    -- Upgradeable attributes variables (not including self.cue_stick.stops)
+    self.timer = timer 
+    self.cue_ball_radius = cue_ball_radius 
+    self.cash_bonus = cash_bonus
+    self.score_multiplier = score_multiplier
+   
+    -- Rendering background
     self.dist_from_walls = 40
-    self.radius = 25
+    self.radius = 30
     self.background = Background(self.dist_from_walls)
 
-    -- Params: world, x, y, r, g, b, bodyType, userData
-    self.cue_ball = Ball(self.world, VIRTUAL_WIDTH / 4, VIRTUAL_HEIGHT / 2, 1, 1, 1, 'dynamic', 'cue_ball')
+    -- Spawner (Every spawn_interval seconds, spawn a new ball to hit)
+    self.spawner = spawn_interval
+    self.spawn_interval = spawn_interval
 
-    self.cue_stick = CueStick(self.cue_ball)
+    -- Params: world, x, y, radius, r, g, b, bodyType, userData
+    self.cue_ball = Ball(self.world, VIRTUAL_WIDTH / 4, VIRTUAL_HEIGHT / 2, self.cue_ball_radius, 1, 1, 1, 'dynamic', 'cue_ball')
+    self.cue_stick = CueStick(self.cue_ball, stops, force_scalar)
 
+    -- Collision tables
     self.walls = {}
     self.holes = {}
 
     -- Generate hitboxes for table frame (spent too much time removing magic numbers from this)
-    width = (VIRTUAL_WIDTH - 2*self.dist_from_walls - 4*self.radius) / 2
-    height = self.dist_from_walls
+    local width = (VIRTUAL_WIDTH - 2*self.dist_from_walls - 4*self.radius) / 2
+    local height = self.dist_from_walls
     for _, x in ipairs({self.radius+self.dist_from_walls, VIRTUAL_WIDTH-width-self.radius-self.dist_from_walls}) do 
         for _, y in ipairs({0, VIRTUAL_HEIGHT - self.dist_from_walls}) do 
-            body = love.physics.newBody(self.world, x + width/2, y + height/2, 'static') 
-            shape = love.physics.newRectangleShape(width, height) 
+            local body = love.physics.newBody(self.world, x + width/2, y + height/2, 'static') 
+            local shape = love.physics.newRectangleShape(width, height) 
 
-            fixture = love.physics.newFixture(body, shape) 
+            local fixture = love.physics.newFixture(body, shape) 
             fixture:setRestitution(0.8)
 
             table.insert(self.walls, fixture) 
         end
     end
 
-    y = self.dist_from_walls+self.radius
-    width = self.dist_from_walls
-    height = VIRTUAL_HEIGHT - 2*self.dist_from_walls - 2*self.radius
+    local y = self.dist_from_walls+self.radius
+    local width = self.dist_from_walls
+    local height = VIRTUAL_HEIGHT - 2*self.dist_from_walls - 2*self.radius
     for _, x in ipairs({0, VIRTUAL_WIDTH - self.dist_from_walls}) do 
-        body = love.physics.newBody(self.world, x + width/2, y + height/2, 'static') 
-        shape = love.physics.newRectangleShape(width, height) 
+        local body = love.physics.newBody(self.world, x + width/2, y + height/2, 'static') 
+        local shape = love.physics.newRectangleShape(width, height) 
 
-        fixture = love.physics.newFixture(body, shape)
+        local fixture = love.physics.newFixture(body, shape)
         fixture:setRestitution(0.8)
         table.insert(self.walls, fixture)
     end
@@ -53,67 +70,41 @@ function Level:init()
 
     -- Balls
     self.balls = {}
-
-    table.insert(self.balls, Ball(self.world, self.dist_from_walls, VIRTUAL_HEIGHT-self.dist_from_walls-self.radius, 1, 0, 0, 'dynamic', 'ball'))
-    table.insert(self.balls, Ball(self.world, self.dist_from_walls, self.dist_from_walls+self.radius+1, 1, 0, 0, 'dynamic', 'ball'))
-    table.insert(self.balls, Ball(self.world, VIRTUAL_WIDTH-self.dist_from_walls, self.dist_from_walls+self.radius+1, 1, 0, 0, 'dynamic', 'ball'))
 end
 
+-- Function to play a sound when balls collide
 function beginContact(a, b, coll)
-    a_type = a:getUserData()
-    b_type = b:getUserData()
+    local a_type = a:getUserData()
+    local b_type = b:getUserData()
 
     if (a_type == 'cue_ball' or a_type == 'ball') and (b_type == 'cue_ball' or b_type == 'ball') then 
         gSounds['ball']:play()
     end
 end
 
-function Level:createBallRack()
-    rack_x = VIRTUAL_WIDTH * 0.7
-    rack_y = VIRTUAL_HEIGHT / 2
-    spacing = 25
-    
-    -- Red, Blue, and 8 Balls
-    local ball_arrangement = {
-        {'R'},
-        {'B', 'R'},
-        {'R', '8', 'B'},
-        {'B', 'R', 'B', 'R'},
-        {'R', 'B', 'R', 'B', 'R'}
-    }
-    
-    for row_index, row in ipairs(ball_arrangement) do
-        balls_in_row = #row
-        row_x = rack_x + (row_index - 1) * spacing * 0.866 -- constant tuned to make it look like a triangle
-        
-        for col_index, ball_type in ipairs(row) do
-            offset_y = (col_index - 1) * spacing - (balls_in_row - 1) * spacing / 2
-            ball_y = rack_y + offset_y
-            
-            if ball_type == 'R' then
-                r, g, b = 0.9, 0.1, 0.1
-            elseif ball_type == 'B' then
-                r, g, b = 0.1, 0.3, 0.9 
-            else
-                r, g, b = 0, 0, 0
-            end
-            
-            local ball = Ball(self.world, row_x, ball_y, r, g, b, 'dynamic', ball_type)
-
-            table.insert(self.balls, ball)
-        end
-    end
-end
-
 function Level:update(dt)
+    self.timer = self.timer - dt 
+
     self.cue_stick:update(dt)
     self.world:update(dt)
     
-    -- Update ball animation
     self.cue_ball:update(dt)
 
+    -- Spawn a new ball if the time frame is ready
+    self.spawner = self.spawner + dt 
+    if self.spawner > self.spawn_interval then 
+        self.spawner = 0 
+        local r, g, b = self:getRandomColor()
+        local x, y = self:getRandomPosition()
+        local ball = Ball(self.world, x, y, 10, r, g, b, 'dynamic', 'ball')
+        table.insert(self.balls, ball)
+    end
+
+    -- Remove balls that have been pocketed
     for i, ball in ipairs(self.balls) do 
         if ball.dead then 
+            self.balls_pocketed = self.balls_pocketed + self.score_multiplier
+            self.cash = self.cash + self.cash_bonus
             table.remove(self.balls, i)    
         else
             ball:update(dt)
@@ -122,15 +113,15 @@ function Level:update(dt)
     
     -- Only check for holes if ball isn't already falling
     if not self.cue_ball:isFalling() then
-        ball_x, ball_y = self.cue_ball:getPosition()
+        local ball_x, ball_y = self.cue_ball:getPosition()
 
         for _, pos in ipairs(self.holes) do 
-            hole_x = pos[1]
-            hole_y = pos[2]
+            local hole_x = pos[1]
+            local hole_y = pos[2]
 
-            dx = ball_x - hole_x
-            dy = ball_y - hole_y
-            dist = math.sqrt(dx^2 + dy^2)
+            local dx = ball_x - hole_x
+            local dy = ball_y - hole_y
+            local dist = math.sqrt(dx^2 + dy^2)
           
             if dist < self.radius then 
                 -- Start the falling animation instead of instant reset
@@ -140,15 +131,16 @@ function Level:update(dt)
         end
     end
 
+    -- Start ball falling animation when the ball enters a pocket
     for _, ball in ipairs(self.balls) do 
-        ball_x, ball_y = ball:getPosition()
+        local ball_x, ball_y = ball:getPosition()
         for _, pos in ipairs(self.holes) do 
-            hole_x = pos[1] 
-            hole_y = pos[2] 
+            local hole_x = pos[1] 
+            local hole_y = pos[2] 
 
-            dx = ball_x - hole_x 
-            dy = ball_y - hole_y 
-            dist = math.sqrt(dx^2 + dy^2)
+            local dx = ball_x - hole_x 
+            local dy = ball_y - hole_y 
+            local dist = math.sqrt(dx^2 + dy^2)
 
             if dist < self.radius then 
                 ball:startFalling(hole_x, hole_y)
@@ -157,13 +149,57 @@ function Level:update(dt)
     end
 end
 
+function Level:getRandomColor() 
+    if math.random(0, 1) == 0 then 
+        return 1, 0, 0 
+    end
+
+    return 0, 0, 1
+end
+
+function Level:getRandomPosition()
+    local x = math.random(self.dist_from_walls, VIRTUAL_WIDTH-self.dist_from_walls)
+    local y = math.random(self.dist_from_walls+self.radius+1, VIRTUAL_HEIGHT-self.dist_from_walls-self.radius)
+    return x, y
+end
+
+function Level:getRandomVelocity()
+    local x = math.random(100, 400) * (math.random(0, 1) * 2 - 1)
+    local y = math.random(100, 400) * (math.random(0, 1) * 2 - 1)
+    return x, y
+end
+
+-- Displays the time that the player has left to finish the current round
+function Level:displayHUD() 
+    -- Quick time calculations
+    local int_time = math.floor(self.timer + 0.5)
+    local min = tostring(math.floor(self.timer / 60))
+
+    local sec = int_time % 60 
+    if sec < 10 then 
+        sec = "0" .. sec
+    end
+
+    local time = min .. ":" .. sec 
+
+    -- Display important info
+    love.graphics.setFont(gFonts['medium']) 
+    love.graphics.setColor(1, 1, 1)
+
+    love.graphics.printf("Round: " .. self.round, 3*self.radius, 0, VIRTUAL_WIDTH, 'left')
+    love.graphics.printf(time, -7*self.radius, VIRTUAL_HEIGHT - self.dist_from_walls, VIRTUAL_WIDTH, 'right')
+    love.graphics.printf(self.balls_pocketed .. "/" .. self.balls_needed, -3*self.radius, 0, VIRTUAL_WIDTH, 'right')
+    love.graphics.printf("Stops: " .. self.cue_stick.stops, 3*self.radius, VIRTUAL_HEIGHT - self.dist_from_walls, VIRTUAL_WIDTH, 'left')
+    love.graphics.printf("$" .. self.cash, -3*self.radius, VIRTUAL_HEIGHT - self.dist_from_walls, VIRTUAL_WIDTH, 'right')
+end
+
 function Level:render()
     self.background:render()
 
     love.graphics.setColor(0, 0, 0)
     for _, pos in ipairs(self.holes) do 
-        x = pos[1]
-        y = pos[2]
+        local x = pos[1]
+        local y = pos[2]
         love.graphics.circle('fill', x, y, self.radius)
     end
 
@@ -173,7 +209,10 @@ function Level:render()
     for _, ball in ipairs(self.balls) do 
         ball:render()
     end
+
     self.cue_stick:render()
+
+    self:displayHUD()
 
     -- Render Hitboxes
     -- love.graphics.setColor(1, 0, 0)

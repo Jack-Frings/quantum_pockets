@@ -14,16 +14,17 @@ require 'src/Slider'
 require 'src/states/BaseState'
 require 'src/states/PlayState'
 require 'src/states/StartState'
+require 'src/states/ShopState'
 
 require 'src/states/cue_stick/WaitingState'
 require 'src/states/cue_stick/PoweringState'
-require 'src/states/cue_stick/AnimationState'
 require 'src/states/cue_stick/HittingState'
+require 'src/states/cue_stick/MovingState'
 
 gFonts = {
     ['small'] = love.graphics.newFont('fonts/font.ttf', 8),
-    ['medium'] = love.graphics.newFont('fonts/font.ttf', 16),
-    ['large'] = love.graphics.newFont('fonts/font.ttf', 32),
+    ['medium'] = love.graphics.newFont('fonts/font.ttf', 32),
+    ['large'] = love.graphics.newFont('fonts/font.ttf', 48),
     ['huge'] = love.graphics.newFont('fonts/font.ttf', 64)
 }
 

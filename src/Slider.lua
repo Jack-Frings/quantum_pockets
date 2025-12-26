@@ -60,7 +60,7 @@ function Slider:render()
 end
 
 function Slider:getStrength()
-    player = self.slide_x + self.slide_width/2 
-    mid = self.width/2
+    local player = self.slide_x + self.slide_width/2 
+    local mid = self.width/2
     return (145 - math.abs(player - mid))
 end

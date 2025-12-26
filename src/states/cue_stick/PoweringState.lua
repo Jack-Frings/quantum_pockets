@@ -10,7 +10,7 @@ end
 function PoweringState:update(dt) 
     self.slider:update(dt)
     if love.keyboard.wasPressed('return') or love.keyboard.wasPressed('enter') or love.keyboard.wasPressed('space') then 
-        self.cue_stick:changeState('animation', {target=self.slider:getStrength()})
+        self.cue_stick:changeState('hitting', {target=self.slider:getStrength()})
     end
 
     if love.keyboard.wasPressed('q') then 
@@ -19,18 +19,18 @@ function PoweringState:update(dt)
 end
 
 function PoweringState:render()
-    ball_x, ball_y = self.cue_ball:getPosition()
-    stick_x = ball_x + math.cos(self.cue_stick.angle) * self.cue_stick.magnitude 
-    stick_y = ball_y + math.sin(self.cue_stick.angle) * self.cue_stick.magnitude  
-    rot = math.atan2(ball_y - stick_y, ball_x - stick_x)
+    local ball_x, ball_y = self.cue_ball:getPosition()
+    local stick_x = ball_x + math.cos(self.cue_stick.angle) * self.cue_stick.magnitude 
+    local stick_y = ball_y + math.sin(self.cue_stick.angle) * self.cue_stick.magnitude  
+    local rot = math.atan2(ball_y - stick_y, ball_x - stick_x)
 
     love.graphics.push()
     love.graphics.translate(stick_x, stick_y)
     love.graphics.rotate(rot) 
     
-    total_length = 0 
+    local total_length = 0 
 
-    section_length = 0.3*self.cue_stick.length
+    local section_length = 0.3*self.cue_stick.length
     love.graphics.setColor(100/255, 40/255, 50/255)
     love.graphics.rectangle('fill', -self.cue_stick.length, -self.cue_stick.width/2, section_length, self.cue_stick.width)
     total_length = total_length + section_length

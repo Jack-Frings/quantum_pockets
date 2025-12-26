@@ -13,9 +13,14 @@ function love.load()
 
     gStateMachine = StateMachine {
         ['start'] = function() return StartState() end,
-        ['play'] = function() return PlayState() end
+        ['play'] = function() return PlayState() end,
+        ['shop'] = function() return ShopState() end
     }
-    gStateMachine:change('start')
+    gStateMachine:change('start', {msg="Deep Pockets"})
+    -- costs = {3, 3, 3, 3, 3, 3, 3}
+    -- gStateMachine:change('shop', {cur_level=1, cash=10, start_time=30, spawn_interval=5,
+    --                               cue_ball_radius=10, cue_stick_force_scalar=2, stops=3,
+    --                               cash_bonus=1, score_multiplier=1, costs=costs})
 
     gSounds['jazzy']:setLooping(true)
     gSounds['jazzy']:setVolume(0.5)

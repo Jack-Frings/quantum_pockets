@@ -1,6 +1,6 @@
 CueStick = Class{} 
 
-function CueStick:init(cue_ball) 
+function CueStick:init(cue_ball, stops, force_scalar)
     self.cue_ball = cue_ball 
 
     self.width = 8
@@ -9,11 +9,14 @@ function CueStick:init(cue_ball)
     self.angle = math.pi
     self.magnitude = 20
 
+    self.stops = stops
+    self.force_scalar = force_scalar
+
     self.stateMachine = StateMachine {
         ['waiting'] = function() return WaitingState(self) end,
         ['powering'] = function() return PoweringState(self) end, 
-        ['animation'] = function() return AnimationState(self) end,
-        ['hitting'] = function() return HittingState(self) end
+        ['hitting'] = function() return HittingState(self) end,
+        ['moving'] = function() return MovingState(self) end
     }
     self.stateMachine:change('waiting')
 end
@@ -29,3 +32,5 @@ end
 function CueStick:render() 
     self.stateMachine:render()
 end
+
+

@@ -47,9 +47,9 @@ function Background:render()
 
 
     -- Frame 
-    frame_r = 60/255 
-    frame_g = 60/255 
-    frame_b = 60/255
+    local frame_r = 60/255 
+    local frame_g = 60/255 
+    local frame_b = 60/255
 
     love.graphics.setColor(frame_r, frame_g, frame_b)
     love.graphics.rectangle('fill', 0, 0, self.dist_from_walls, VIRTUAL_HEIGHT)

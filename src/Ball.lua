@@ -1,6 +1,6 @@
 Ball = Class{} 
 
-function Ball:init(world, x, y, r, g, b, bodyType, userData) 
+function Ball:init(world, x, y, radius, r, g, b, bodyType, userData) 
     self.world = world 
 
     self.body = love.physics.newBody(self.world, x, y, bodyType) 
@@ -11,14 +11,22 @@ function Ball:init(world, x, y, r, g, b, bodyType, userData)
     self.g = g 
     self.b = b
 
-    self.shape = love.physics.newCircleShape(10)
+    self.shape = love.physics.newCircleShape(radius)
     self.fixture = love.physics.newFixture(self.body, self.shape)
     self.fixture:setUserData(userData)
 
     self.fixture:setFriction(0.05)
     self.fixture:setRestitution(0.95)
+
+    self.radius = radius
+    self.og_radius = radius
+
+    local volume = math.pi * self.radius^2
+    local density = (math.pi * 10^2) / volume
+    self.fixture:setDensity(density)
+    self.body:resetMassData()
     
-    self.radius = 10
+    
     self.falling = false
     self.fall_timer = 0
     self.fall_duration = 0.8
@@ -40,9 +48,8 @@ function Ball:startFalling(hole_x, hole_y)
         self.start_x = self.body:getX()
         self.start_y = self.body:getY()
         
-        -- Disable physics interactions
         self.body:setLinearVelocity(0, 0)
-        self.body:setActive(false)
+        self.body:setActive(false) -- Disable collisions
     end
 end
 
@@ -51,15 +58,14 @@ function Ball:update(dt)
 
     if self.falling then
         self.fall_timer = self.fall_timer + dt
-        progress = math.min(self.fall_timer / self.fall_duration, 1)
-       
+        local progress = math.min(self.fall_timer / self.fall_duration, 1)
        
         -- This is a cubic function so that the ball eases into and out of the flaling animation. 
-        eased = 1 - (1 - progress)^3
+        local eased = 1 - (1 - progress)^3
        
-        -- Update x and y based on the hole's center
-        current_x = self.start_x + (self.target_hole_x - self.start_x) * eased
-        current_y = self.start_y + (self.target_hole_y - self.start_y) * eased
+        -- Move ball to the center of the hole
+        local current_x = self.start_x + (self.target_hole_x - self.start_x) * eased
+        local current_y = self.start_y + (self.target_hole_y - self.start_y) * eased
         self.body:setPosition(current_x, current_y)
        
         -- Shrink ball
@@ -78,7 +84,7 @@ end
 
 function Ball:resetBall()
     self.falling = false
-    self.radius = 10
+    self.radius = self.og_radius
     self.body:setActive(true)
     self.body:setPosition(VIRTUAL_WIDTH / 2, VIRTUAL_HEIGHT / 2)
     self.body:setLinearVelocity(0, 0)
